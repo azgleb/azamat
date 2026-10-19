@@ -2,7 +2,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const root = __dirname;
-const files = {'/':'index.html','/index.html':'index.html','/style.css':'style.css','/app.js':'app.js','/content.js':'content.js','/site.json':'site.json','/admin.html':'admin.html','/admin.js':'admin.js','/admin.css':'admin.css'};
+const files = {'/':'index.html','/index.html':'index.html','/style.css':'style.css','/app.js':'app.js','/content.js':'content.js','/site.json':'site.json','/admin.html':'admin.html','/admin.js':'admin.js','/admin.css':'admin.css','/backend-config.js':'backend-config.js','/backend-client.js':'backend-client.js','/contact.js':'contact.js'};
 http.createServer((req,res)=>{
  const file=files[new URL(req.url,'http://localhost').pathname];
  if(!file){res.writeHead(404);return res.end('Not found');}

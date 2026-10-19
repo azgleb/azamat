@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
-    "check": "node --check app.js && node --check content.js && node --check admin.js && node --check server.js"
+    "check": "node --check app.js && node --check content.js && node --check admin.js && node --check contact.js && node --check backend-client.js && node --check server.js",
+    "test": "node --test tests/*.test.cjs"
   }
 }
