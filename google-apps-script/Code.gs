@@ -7,7 +7,7 @@ function setup() {
     p.setProperty('SHEET_ID', book.getId());
   }
   var sheet = leadSheet_();
-  if (sheet.getLastRow() === 0) sheet.appendRow(['Дата UTC', 'ID', 'Имя', 'Контакт', 'Услуга', 'Бюджет', 'Описание', 'Статус']);
+  if (sheet.getLastRow() === 0) sheet.appendRow(['Дата UTC', 'ID', 'Имя', 'Контакт', 'Услуга', 'Бюджет', 'Описание', 'Статус', 'Уведомления']);
   sheet.setFrozenRows(1);
   resetAdminPassword();
   console.log('Таблица: https://docs.google.com/spreadsheets/d/' + p.getProperty('SHEET_ID') + '/edit');
@@ -89,15 +89,54 @@ function submitLead_(b) {
   var name=text_(b.name,100,'Имя'),contact=text_(b.contact,200,'Контакт'),message=text_(b.message,3000,'Описание');
   if(message.length<10)fail_('Расскажите о проекте чуть подробнее (от 10 символов).');
   if(['Сайт / разработка','Дизайн интерфейса','Брендинг','Другое'].indexOf(b.service)<0||['Обсудим','До 30 000 ₽','30 000–100 000 ₽','От 100 000 ₽'].indexOf(b.budget)<0)fail_('Проверьте услугу и бюджет.');
-  return withLock_(function(){
+  var result=withLock_(function(){
     var sheet=leadSheet_();
     // Durable idempotency: retrying after a lost response cannot append a duplicate, even after cache eviction.
     if(sheet.getLastRow()>1&&sheet.getRange(2,2,sheet.getLastRow()-1,1).createTextFinder(b.requestId).matchEntireCell(true).findNext())return {saved:true,id:b.requestId};
     var cache=CacheService.getScriptCache(),minute='leads:'+Math.floor(Date.now()/60000),count=Number(cache.get(minute)||0),contactKey='contact:'+hash_(contact.toLowerCase());
     if(count>=20||cache.get(contactKey))fail_('Заявка уже отправлялась недавно. Подождите минуту перед новой заявкой.','RATE_LIMIT');
     sheet.appendRow([new Date().toISOString(),b.requestId,cell_(name),cell_(contact),cell_(b.service),cell_(b.budget),cell_(message),'Новая']);
-    cache.put(minute,String(count+1),120);cache.put(contactKey,'1',60);return {saved:true,id:b.requestId};
+    cache.put(minute,String(count+1),120);cache.put(contactKey,'1',60);return {saved:true,id:b.requestId,isNew:true};
   });
+  if(result.isNew){
+    // The lead is already durable. Notification errors must never turn a saved request into a failure.
+    try {
+      var delivery=notifyLead_({name:name,contact:contact,message:message,service:b.service,budget:b.budget});
+      withLock_(function(){var sheet=leadSheet_();sheet.getRange(1,9).setValue('Уведомления');var found=sheet.getRange(2,2,sheet.getLastRow()-1,1).createTextFinder(b.requestId).matchEntireCell(true).findNext();if(found)sheet.getRange(found.getRow(),9).setValue(delivery);});
+    } catch (_) { console.log('Не удалось обновить статус уведомлений. Заявка сохранена.'); }
+  }
+  return {saved:true,id:b.requestId};
+}
+/** Optional owner-only editor function: request Gmail sending permission without sending a message. */
+function authorizeEmailNotifications() { console.log('Доступный дневной лимит писем: '+MailApp.getRemainingDailyQuota()); }
+/** Owner-only helper. Start your bot in Telegram before running this from the editor. */
+function showTelegramChatIds() {
+  var token=(PropertiesService.getScriptProperties().getProperty('TELEGRAM_BOT_TOKEN')||'').trim();
+  if(!/^[0-9]+:[A-Za-z0-9_-]+$/.test(token))throw new Error('Добавьте TELEGRAM_BOT_TOKEN в свойства скрипта.');
+  try{
+    var response=UrlFetchApp.fetch('https://api.telegram.org/bot'+token+'/getUpdates',{muteHttpExceptions:true});
+    if(response.getResponseCode()!==200)throw new Error('Telegram failed');var data=JSON.parse(response.getContentText());if(!data.ok)throw new Error('Telegram failed');
+    var ids={};(data.result||[]).forEach(function(update){var message=update.message||update.channel_post;if(message&&message.chat)ids[String(message.chat.id)]=true;});
+    if(!Object.keys(ids).length)console.log('Откройте вашего бота, нажмите Start и отправьте сообщение, затем повторите запуск.');
+    Object.keys(ids).forEach(function(id){console.log('TELEGRAM_CHAT_ID: '+id);});
+  }catch(_){throw new Error('Не удалось получить chat_id. Проверьте токен и доступ к Telegram.');}
+}
+function notifyLead_(lead) {
+  var p=PropertiesService.getScriptProperties(),email=(p.getProperty('NOTIFY_EMAIL')||'').trim(),token=(p.getProperty('TELEGRAM_BOT_TOKEN')||'').trim(),chat=(p.getProperty('TELEGRAM_CHAT_ID')||'').trim();
+  var body='Новая заявка — Azamat Works\n\nИмя: '+lead.name+'\nКонтакт: '+lead.contact+'\nУслуга: '+lead.service+'\nБюджет: '+lead.budget+'\n\n'+lead.message+'\n\nТаблица: https://docs.google.com/spreadsheets/d/'+p.getProperty('SHEET_ID')+'/edit';
+  var statuses=[];
+  if(email){
+    try{if(!/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(email))throw new Error('Invalid destination');if(MailApp.getRemainingDailyQuota()<1)throw new Error('Quota');MailApp.sendEmail({to:email,subject:'Новая заявка с сайта Azamat Works',body:body,name:'Azamat Works'});statuses.push('Email: отправлено');}
+    catch(_){statuses.push('Email: ошибка — проверьте адрес, разрешения и квоту');}
+  }
+  if(token||chat){
+    try{
+      if(!/^[0-9]+:[A-Za-z0-9_-]+$/.test(token)||!/^(-?[0-9]+|@[A-Za-z0-9_]+)$/.test(chat))throw new Error('Invalid Telegram configuration');
+      var response=UrlFetchApp.fetch('https://api.telegram.org/bot'+token+'/sendMessage',{method:'post',contentType:'application/json',payload:JSON.stringify({chat_id:chat,text:body,disable_web_page_preview:true}),muteHttpExceptions:true});
+      if(response.getResponseCode()!==200||JSON.parse(response.getContentText()).ok!==true)throw new Error('Telegram failed');statuses.push('Telegram: отправлено');
+    }catch(_){statuses.push('Telegram: ошибка — проверьте бота и chat_id');}
+  }
+  return statuses.length?statuses.join('; '):'Уведомления не настроены';
 }
 function listLeads_() {
   var sheet=leadSheet_(),last=sheet.getLastRow();if(last<2)return {leads:[]};var first=Math.max(2,last-99);
