@@ -167,42 +167,6 @@
           "data": "data:application/octet-stream;base64,U2xpcENSTSDigJQgQ1JNINCx0LXQtyDQu9C40YjQvdC10Lkg0YHQu9C+0LbQvdC+0YHRgtC4CgrQl9CQ0JTQkNCn0JAK0KPQv9GA0L7RgdGC0LjRgtGMINC/0L7QstGB0LXQtNC90LXQstC90YPRjiDRgNCw0LHQvtGC0YMg0L3QtdCx0L7Qu9GM0YjQuNGFINC60L7QvNCw0L3QtCDQv9GA0L7QtNCw0LY6INC60LvQuNC10L3RgtGLLCDQt9Cw0LTQsNGH0LgsINC60L7QvNC80YPQvdC40LrQsNGG0LjQuCDQuCDQv9C+0YHQu9C10LTRg9GO0YnQuNC1INC60LDRgdCw0L3QuNGPINCyINC+0LTQvdC+0Lwg0LjQvdGC0LXRgNGE0LXQudGB0LUuCgrQoNCV0KjQldCd0JjQlQrQoNCw0LfRgNCw0LHQsNGC0YvQstCw0Y4gU2xpcENSTTog0YDQvtC70LgsINC60LDRgNGC0L7Rh9C60Lgg0LrQu9C40LXQvdGC0L7Qsiwg0L3QsNC/0L7QvNC40L3QsNC90LjRjywg0LDQstGC0L7QvNCw0YLQuNC30LDRhtC40Y4g0LrQvtC80LzRg9C90LjQutCw0YbQuNC5INC4INC40L3RgtC10LPRgNCw0YbQuNC+0L3QvdGL0LUg0YHRhtC10L3QsNGA0LjQuC4KCtCg0JXQl9Cj0JvQrNCi0JDQogrQnNC10L3RjNGI0LUg0YDRg9GH0L3QvtCz0L4g0LrQvtC90YLRgNC+0LvRjyDigJQg0LHQvtC70YzRiNC1INCy0YDQtdC80LXQvdC4INC90LAg0LrQu9C40LXQvdGC0LAuCgrQodC+0LHRgdGC0LLQtdC90L3Ri9C5INC/0YDQvtC00YPQutGCINCyINGA0LDQt9GA0LDQsdC+0YLQutC1LiDQndC1INC+0LHQtdGJ0LDRgtGMINCz0L7RgtC+0LLRi9C1INC40L3RgtC10LPRgNCw0YbQuNC4LCDQv9C+0LrQsCDQvtC90Lgg0L3QtSDQv9GA0L7QstC10YDQtdC90YsuCgrQntCx0LvQvtC20LrQsCDigJQg0LLQuNC30YPQsNC70YzQvdGL0Lkg0LzQsNC60LXRgiwg0L3QtSDRgdC60YDQuNC90YjQvtGCINC/0YDQvtC00YPQutGC0LAu"
         }
       ]
-    },
-    {
-      "id": "demo-sage",
-      "title": "Sage — ближе к природе",
-      "category": "Дизайн",
-      "description": "Демонстрационный проект. Интернет-магазин натуральной косметики: спокойные цвета, простая навигация и внимание к продукту.",
-      "visual": "sage",
-      "year": 2026,
-      "published": true
-    },
-    {
-      "id": "demo-orbit",
-      "title": "Orbit — пространство идей",
-      "category": "Разработка",
-      "description": "Демонстрационный проект. Цифровая платформа для творческих команд и совместной работы.",
-      "visual": "orbit",
-      "year": 2026,
-      "published": true
-    },
-    {
-      "id": "demo-form",
-      "title": "Форма — характер в деталях",
-      "category": "Брендинг",
-      "description": "Демонстрационный проект. Визуальная айдентика независимой архитектурной студии.",
-      "visual": "form",
-      "year": 2025,
-      "published": true
-    },
-    {
-      "id": "demo-mono",
-      "title": "Mono — всё под контролем",
-      "category": "Дизайн",
-      "description": "Демонстрационный проект. Личный кабинет с понятной аналитикой и удобным управлением задачами.",
-      "visual": "mono",
-      "year": 2025,
-      "published": true
     }
   ]
 }
