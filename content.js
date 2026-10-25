@@ -2,6 +2,15 @@ window.Portfolio=(()=>{
 const limits={name:80,logo:40,title:160,intro:500,aboutTitle:160,about:2000,skills:500,contactTitle:160,email:254,telegram:200};
 function safeURL(value){try{return typeof value==='string'&&['https:','http:'].includes(new URL(value).protocol);}catch{return false;}}
 function element(tag,cls,text){const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el;}
+function caseFields(p){
+ const fields={};for(const key of ['task','solution','result']){const v=p[key]===undefined?'':p[key];if(typeof v!=='string'||v.length>3000)throw Error('Слишком длинный текст кейса');fields[key]=v;}
+ const list=p.materials===undefined?[]:p.materials;if(!Array.isArray(list)||list.length>20)throw Error('Не более 20 материалов в кейсе');
+ fields.materials=list.map(m=>{
+ if(!m||!['image','document'].includes(m.kind)||typeof m.name!=='string'||!m.name.trim()||m.name.length>150||typeof m.caption!=='string'||m.caption.length>500||typeof m.data!=='string')throw Error('Некорректный материал');
+ if(m.kind==='image'){if(m.data.length>450000||!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(m.data))throw Error('Некорректное изображение');}
+ else if(!/\.(pdf|txt|docx|xlsx|pptx)$/i.test(m.name)||m.data.length>350000||!/^data:application\/octet-stream;base64,[A-Za-z0-9+/]+={0,2}$/.test(m.data))throw Error('Документ: PDF, TXT, DOCX, XLSX, PPTX, до 250 КБ');
+ return {kind:m.kind,name:m.name.trim(),caption:m.caption,data:m.data};});return fields;
+}
 function validate(data){
  if(!data||data.version!==1||!data.settings||!Array.isArray(data.projects)||data.projects.length>200)throw Error('Неверный формат данных сайта');
  const settings={};for(const [key,max] of Object.entries(limits)){const v=data.settings[key];if(typeof v!=='string'||v.length>max)throw Error('Проверьте поле '+key);settings[key]=v;}
@@ -10,11 +19,11 @@ function validate(data){
  if(settings.telegram&&(!/^https:\/\/t\.me\/[a-zA-Z0-9_]+$/.test(settings.telegram)))throw Error('Ссылка Telegram: https://t.me/username');
  settings.available=Boolean(data.settings.available);
  const ids=new Set();const projects=data.projects.map(p=>{
- if(!p||typeof p.title!=='string'||!p.title.trim()||p.title.length>80||!['Дизайн','Разработка','Брендинг'].includes(p.category)||typeof p.description!=='string'||!p.description.trim()||p.description.length>1200||!Number.isInteger(p.year)||p.year<2000||p.year>2100)throw Error('Проверьте название, категорию, описание и год проекта');
+ if(!p||typeof p.title!=='string'||!p.title.trim()||p.title.length>80||!['Дизайн','Разработка','Брендинг','Автоматизация','ИИ и боты','Обучение','Продукты'].includes(p.category)||typeof p.description!=='string'||!p.description.trim()||p.description.length>1200||!Number.isInteger(p.year)||p.year<2000||p.year>2100)throw Error('Проверьте название, категорию, описание и год проекта');
  if(typeof p.id!=='string'||!p.id||ids.has(p.id))throw Error('Проекты должны иметь уникальные идентификаторы');ids.add(p.id);
  if(p.url&&!safeURL(p.url))throw Error('Ссылки проектов должны начинаться с https:// или http://');
  if(p.cover&&(typeof p.cover!=='string'||p.cover.length>450000||!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(p.cover)))throw Error('Некорректная или слишком большая обложка');
- return {id:p.id,title:p.title.trim(),description:p.description.trim(),category:p.category,year:p.year,url:p.url||'',cover:p.cover||'',visual:['sage','orbit','form','mono'].includes(p.visual)?p.visual:'sage',published:p.published!==false};
+ return {...caseFields(p),id:p.id,title:p.title.trim(),description:p.description.trim(),category:p.category,year:p.year,url:p.url||'',cover:p.cover||'',visual:['sage','orbit','form','mono'].includes(p.visual)?p.visual:'sage',published:p.published!==false};
  });return {version:1,settings,projects};
 }
 function applySettings(s){
